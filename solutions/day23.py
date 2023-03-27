@@ -124,7 +124,7 @@ def find_intervals(nanobots):
 
 
 
-def sweep(cluster, center=(0, 0, 0)):
+def sweep(nanobots, center=(0, 0, 0)):
     # TODO:
         # Start with bounding box containing all bots
         # Get biggest cluster of mutually in range bots
@@ -133,25 +133,28 @@ def sweep(cluster, center=(0, 0, 0)):
         # Subdivided into  8 cubes
 
 
-        queue = # Bounding box of all regions's vertices
-        best = inf
+        queue = # Put Bounding box of all regions's vertices with all 1000 bots
+        closest_distance = inf
+        most_bots = -inf
 
-        for cube in queue:
-            if manhattan(cube.min_vertex) >= best:
-                continue
-            for bot in cluster:
+        while  queue:
+            possible_bots, cube = queue.get(block = False)
+            # if manhattan(cube.min_vertex) >= best:
+            #     continue
                 # Only subdivide if each bot's region has at least one point overlapping
                 # the cube
-                if not ((any(cube.inside(vertex) for vertex in bot.vertices)
-                or any(bot.in_range(vertex) for vertex in cube.vertices )
-                or any (bot.in_range(edge) for edge in cube.edges))):
-                    break
+            bots =  sum(any(cube.inside(vertex) for vertex in bot.vertices)
+            or any(bot.in_range(vertex) for vertex in cube.vertices)
+            or any (bot.in_range(edge) for edge in cube.edges) for bot in nanobots)
+                # Closest distance with the most mots
+            if cube.single:
+                if bots > most_bots:
+                    most_bots = bots
+                    closest_distance = manhattan(cube.vertices[0])
+                elif bots == most_bots:
+                    closest_distance = min(closest_distance, manhattan(cube.vertices[0]) )
             else:
-                    # Base case: single candidate point
-                    if cube.single:
-                        best = min(best, manhattan(cube.vertices[0]))
-                    else:
-                        queue.appendleft(cube.subdivide())
+                queue.appendleft(cube.subdivide())
 
         return best
 
@@ -195,5 +198,6 @@ box = list(map(minimize_distance, dimensions))
 cluster = find_clusters(nanobots)
 # 130576687 too high
 
+# Is the answer the space with the maximum number of bots in range ANYWHERE?
 result = sweep(nanobots)
 print(result)
