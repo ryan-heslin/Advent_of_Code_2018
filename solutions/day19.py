@@ -2,10 +2,7 @@ from utils.timecode import Program
 
 
 def sum_divisors(x):
-    result = 1 + x
-    for i in range(2, x // 2):
-        result += (not x % i) * i
-    return result
+    return sum((not x % i) * i for i in range(2, x // 2)) + 1 + x
 
 
 with open("inputs/day19.txt") as f:
@@ -15,11 +12,11 @@ n_registers = 6
 
 program = Program(n_registers)
 program.compile(raw_input)
-# program.exec()
-# part1 = program.registers[0]
-# print(part1)
+program.exec()
+part1 = program.registers[0]
+print(part1)
 
-# program.reset()
+program.reset()
 program.registers[0] = 1
 program.exec(stop_val=2)
 target = program.registers[1]
