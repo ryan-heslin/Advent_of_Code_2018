@@ -1,60 +1,209 @@
+import functools
 import itertools
+import math
+import operator
 import re
-from collections import defaultdict
-from collections import deque
-from functools import cache
-from functools import cached_property
-from math import ceil
-from math import inf
 from operator import attrgetter
+from queue import PriorityQueue
 
 
-@cache
+def max_extent(vertices):
+    vertices = functools.reduce(operator.add, vertices)
+    return max(map(abs, vertices))
+
+
+def unit_cube(unit):
+    # Subtract 1 because all sides are inclusive
+    return (
+        (-unit, -unit, -unit),
+        (unit, -unit, -unit),
+        (unit, unit, -unit),
+        (-unit, unit, -unit),
+        (-unit, -unit, unit),
+        (unit, -unit, unit),
+        (unit, unit, unit),
+        (-unit, unit, unit),
+    )
+
+
+def find_absmax(bots):
+    return max(max_extent(bot.vertices) for bot in bots)
+
+
+@functools.cache
 def manhattan(x, y=(0, 0, 0)):
+    assert len(x) == len(y)
     return sum(abs(xi - yi) for xi, yi in zip(x, y, strict=True))
+
 
 def clamp(x, low, high):
     return min(max(x, low), high)
 
-class Prism():
 
+def add_tuples(x, y):
+    return tuple(xi + yi for xi, yi in zip(x, y))
+
+
+class Cube:
     def __init__(self, vertices):
-        vertices = tuple(sorted(vertices))
-        # One-coord cube
-        if len(set(vertices)) == 1:
-            self.vertices = (vertices[0],)
+        vertices = sorted(vertices)
+
+        # Min and max coord for each dimension
+        data = tuple(zip(*vertices))
+        self.mins = list(map(min, data))
+        self.maxes = list(map(max, data))
+
+        if len(vertices) == 1:
+            self.edges = None
+            self.length = 0
             self.single = True
         else:
-            self.vertices = vertices
+            self.edges = self._set_edges(vertices)
+            # Since first pair is up-down
+            self.length = abs(self.edges[0][0][2] - self.edges[0][1][2])
             self.single = False
-        closest = []
-        min_vertex = self.vertices[0]
-        for vertex in self.vertices:
-            if vertex == min_vertex:
-                closest.append(vertex)
-            else:
-                break
 
-        self.closest = tuple(closest)
+        self.vertices = vertices
+        # Vertices nearest origin (may not be unique)
+        self.min_distance = min(map(manhattan, self.vertices))
 
     # Return start-end pairs for all 12 edges
-    @cached_property
-    def edges(self):
-        result = set()
-        for start in self.vertices:
-            for end in self.vertices:
-                if start != end and (start[0] == end[0] or start[1] == end[1] or start[2] == end[2]):
-                    result.add(tuple(sorted((start, end))))
-
-        return result
+    @staticmethod
+    def _set_edges(vertices):
+        # Can hard-code because we know order of vertices
+        return (
+            (vertices[0], vertices[1]),
+            (vertices[0], vertices[2]),
+            (vertices[0], vertices[4]),
+            (vertices[1], vertices[3]),
+            (vertices[1], vertices[5]),
+            (vertices[2], vertices[3]),
+            (vertices[2], vertices[6]),
+            (vertices[3], vertices[7]),
+            (vertices[4], vertices[5]),
+            (vertices[4], vertices[6]),
+            (vertices[5], vertices[7]),
+            (vertices[6], vertices[7]),
+        )
 
     def vertex_inside(self, vertex):
-        return self.xmin <= vertex[0] <= self.xmax and self.ymin <= vertex[1] <= self.xmax and self.zmin <= zertex <= self.zmax
-
+        return all(self.mins[i] <= vertex[i] <= self.maxes[i] for i in range(3))
 
     def subdivide(self):
-        pass
-        # Break into 8 subcubes
+        # Start from left face; since vertices sorted, first four compose it
+        # x: left-right y: front/rear z: up/down
+        # Since cube inclusive, second partition BEGINS with the coordinate
+        # this far from first partition
+        # Base case
+        if self.length == 1:
+            return (Cube((vertex,)) for vertex in self.vertices)
+        half = self.length // 2
+
+        # Left/rear/down:
+        # In standard vertex order for each
+        additions = (
+            # Left/rear/down
+            (
+                (0, 0, half),
+                (0, half, 0),
+                (0, half, half),
+                (half, 0, 0),
+                (half, 0, half),
+                (half, half, 0),
+                (half, half, half),
+            ),
+            (
+                (0, 0, -half),
+                (0, half, -half),
+                (0, half, 0),
+                (half, 0, -half),
+                (half, 0, 0),
+                (half, half, -half),
+                (half, half, 0),
+            ),
+            # Left/front/down
+            (
+                (0, -half, 0),
+                (0, -half, half),
+                (0, 0, half),
+                (half, -half, 0),
+                (half, -half, half),
+                (half, 0, 0),
+                (half, 0, half),
+            ),
+            # Left/front/ up
+            (
+                (0, -half, -half),
+                (0, -half, 0),
+                (0, 0, -half),
+                (half, -half, -half),
+                (half, -half, 0),
+                (half, 0, -half),
+                (half, 0, 0),
+            ),
+            # Right/rear/down
+            (
+                (-half, 0, 0),
+                (-half, 0, half),
+                (-half, half, 0),
+                (-half, half, half),
+                (0, 0, half),
+                (0, half, 0),
+                (0, half, half),
+            ),
+            # Right/rear/up
+            (
+                (-half, 0, -half),
+                (-half, 0, 0),
+                (-half, half, -half),
+                (-half, half, 0),
+                (0, 0, -half),
+                (0, half, -half),
+                (0, half, 0),
+            ),
+            # Right/front/down
+            (
+                (-half, -half, 0),
+                (-half, -half, half),
+                (-half, 0, 0),
+                (-half, 0, half),
+                (0, -half, 0),
+                (0, -half, half),
+                (0, 0, half),
+            ),
+            # Right/front/up
+            (
+                (-half, -half, -half),
+                (-half, -half, 0),
+                (-half, 0, -half),
+                (-half, 0, 0),
+                (0, -half, -half),
+                (0, -half, 0),
+                (0, 0, -half),
+            ),
+        )
+        cls = type(self)
+        return (
+            cls((vertex,) + tuple(add_tuples(shift, vertex) for shift in addition))
+            for vertex, addition in zip(self.vertices, additions)
+        )
+
+    @functools.cached_property
+    def center(self):
+        half = self.length // 2
+        return (
+            self.vertices[0][0] + half,
+            self.vertices[0][1] + half,
+            self.vertices[0][2] + half,
+        )
+
+    def __repr__(self):
+        return self.vertices.__repr__()
+
+    # Not sure about this...
+    def __lt__(self, other):
+        return manhattan(self.center) < manhattan(other.center)
+
 
 class Nanobot:
     def __init__(self, position, radius) -> None:
@@ -64,13 +213,21 @@ class Nanobot:
     def in_range(self, position):
         return self.radius >= manhattan(self.position, position)
 
-    @cached_property
+    @functools.cached_property
     def vertices(self):
-        return tuple(itertools.chain((coord + self.radius, coord - self.radius) for coord in self.position))
+        return (
+            (self.position[0] + self.radius, self.position[1], self.position[2]),
+            (self.position[0] - self.radius, self.position[1], self.position[2]),
+            (self.position[0], self.position[1] - self.radius, self.position[2]),
+            (self.position[0], self.position[1] + self.radius, self.position[2]),
+            (self.position[0], self.position[1], self.position[2] + self.radius),
+            (self.position[0], self.position[1], self.position[2] - self.radius),
+        )
 
     def __repr__(self) -> str:
         return (self.position, self.radius).__repr__()
 
+    # Is any point of cube edge in scanner radius?
     def edge_in_range(self, edge):
         for i in range(3):
             if edge[0][i] != edge[1][i]:
@@ -80,7 +237,16 @@ class Nanobot:
             raise ValueError
 
         # Find closest point on edge to center and check if it is in range
-        closest = clamp(*sorted((edge[0][dimension], edge[1][dimension])), self.position[dimension])
+
+        target = self.position[dimension]
+        bounds = sorted((edge[0][dimension], edge[1][dimension]))
+        closest = (
+            bounds[0]
+            if target < bounds[0]
+            else bounds[1]
+            if target > bounds[1]
+            else target
+        )
         candidate = tuple(edge[0][i] if i != dimension else closest for i in range(3))
         return self.in_range(candidate)
 
@@ -115,69 +281,61 @@ def minimize_distance(points):
     return points[middle - 1 : middle + 1]
 
 
-def find_intervals(nanobots):
-    # For each pair, all points for which
-    #  sum(abs(c1) -p) <= r1
-    #  sum(abs(c2) -p) <= r2
-    for bot in nanobots:
-        pass
+def count_bots_in_range(cube, bots):
+    return sum(
+        any(cube.vertex_inside(vertex) for vertex in bot.vertices)
+        or any(bot.in_range(vertex) for vertex in cube.vertices)
+        or (
+            not cube.single
+            and (
+                any(bot.edge_in_range(edge) for edge in cube.edges)
+                # or bot.in_range(cube.center)
+            )
+        )
+        for bot in bots
+    )
 
 
+def octary_search(nanobots, box):
+    closest_distance = math.inf
+    most_bots = max(sum(b.in_range(a.position) for a in nanobots) for b in nanobots)
 
-def sweep(nanobots, center=(0, 0, 0)):
-    # TODO:
-        # Start with bounding box containing all bots
-        # Get biggest cluster of mutually in range bots
-        # Use octree to divide and conquer
-        # While queue
-        # Subdivided into  8 cubes
+    queue = PriorityQueue()
+    queue.put((-len(nanobots), Cube(box)))
 
+    while queue.qsize():
+        possible_bots, cube = queue.get(block=False)
+        possible_bots *= -1
+        if possible_bots < most_bots:
+            continue
 
-        queue = # Put Bounding box of all regions's vertices with all 1000 bots
-        closest_distance = inf
-        most_bots = -inf
-
-        while  queue:
-            possible_bots, cube = queue.get(block = False)
-            # if manhattan(cube.min_vertex) >= best:
-            #     continue
-                # Only subdivide if each bot's region has at least one point overlapping
-                # the cube
-            bots =  sum(any(cube.inside(vertex) for vertex in bot.vertices)
-            or any(bot.in_range(vertex) for vertex in cube.vertices)
-            or any (bot.in_range(edge) for edge in cube.edges) for bot in nanobots)
-                # Closest distance with the most mots
-            if cube.single:
-                if bots > most_bots:
-                    most_bots = bots
-                    closest_distance = manhattan(cube.vertices[0])
-                elif bots == most_bots:
-                    closest_distance = min(closest_distance, manhattan(cube.vertices[0]) )
+        # Closest distance with the most mots
+        new_cubes = cube.subdivide()
+        for neighbor in new_cubes:
+            if neighbor.single:
+                final_bots = count_bots_in_range(neighbor, nanobots)
+                if final_bots > most_bots:
+                    most_bots = final_bots
+                    closest_distance = neighbor.min_distance
+                elif final_bots == most_bots:
+                    closest_distance = min(closest_distance, neighbor.min_distance)
             else:
-                queue.appendleft(cube.subdivide())
+                this_bots = count_bots_in_range(neighbor, nanobots)
+                if this_bots > most_bots or (
+                    this_bots == most_bots and neighbor.min_distance < closest_distance
+                ):
+                    queue.put((-this_bots, neighbor), block=False)
 
-        return best
+    return closest_distance
 
 
-
-        # For each cube:
-            # If any vertex of diamond inside cube:
-                # Add cube to queue
-            # Find octant of possible overlap (relative to cube) (unsure if this necessary)
-                # Left, behind, below
-                # Left, behind, above
-                # Right, behind, below
-                # Right, behind, above
-                # Left, before, below
-                # Left, before, above
-                # Right, before, below
-                # Right, before, above
-                # Find faces of cube of intersection
-            # Check if each vertex of cube in diamond region (doesn't cover all cases)
-            # ELse check if each cube side in region
-            #
-            # If cube intersects every bot in cluster: <-- the hard part
-                # Add to queu
+def search_around_point(point, bots):
+    points = itertools.product(
+        range(point[0] - 10, point[0] + 10),
+        range(point[1] - 10, point[1] + 10),
+        range(point[2] - 10, point[2] + 10),
+    )
+    return max(points, key=lambda p: sum(bot.in_range(p) for bot in bots))
 
 
 with open("inputs/day23.txt") as f:
@@ -192,12 +350,29 @@ print(part1)
 
 positions = list(map(attrgetter("position"), nanobots))
 dimensions = list(zip(*positions))
-box = list(map(minimize_distance, dimensions))
 
-# grid = product(*(range(x[0], x[1] + 1) for x in box))
-cluster = find_clusters(nanobots)
 # 130576687 too high
+# 129293596 too low
 
 # Is the answer the space with the maximum number of bots in range ANYWHERE?
-result = sweep(nanobots)
-print(result)
+
+extent = find_absmax(nanobots)
+power = math.ceil(math.log2(extent))
+box = unit_cube(2**power)
+part2 = octary_search(nanobots, box)
+print(part2)
+
+
+sample_cube = [
+    [x * 4 for x in v]
+    for v in (
+        (0, 0, 0),
+        (1, 0, 0),
+        (1, 1, 0),
+        (0, 1, 0),
+        (0, 0, 1),
+        (1, 0, 1),
+        (1, 1, 1),
+        (0, 1, 1),
+    )
+]
