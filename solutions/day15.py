@@ -1,9 +1,9 @@
 from collections import defaultdict
 from collections import deque
 from functools import cache
-from itertools import chain
 from math import inf
-from operator import attrgetter
+
+CINF = complex(inf, inf)
 
 
 class Unit:
@@ -50,7 +50,7 @@ def make_neighbors(coords):
     return result
 
 
-def parse(lines):
+def parse(lines, hp):
 
     result = {}
     allegiances = {"E": "Elves", "G": "Goblins"}
@@ -60,7 +60,7 @@ def parse(lines):
             if char != "#":
                 coord = complex(i, j)
                 if char in allegiances:
-                    result[coord] = Unit(allegiance=allegiances[char])
+                    result[coord] = Unit(hp=hp, allegiance=allegiances[char])
                 else:
                     result[coord] = None
 
@@ -103,7 +103,7 @@ def choose_motion(position, targets, mapping):
     paths, destination = all_paths(position, adjacencies, mapping)
 
     # No positions found
-    if destination:
+    if destination and destination != CINF:
         options = find_initial_steps(paths, destination, position)
         return min(options, key=lambda p: (p.imag, p.real))
     return position
@@ -128,7 +128,7 @@ def adjacent(x, y):
     return abs(x) - abs(y) == 1
 
 
-def simulate(state):
+def simulate(state, no_casualties=None):
     round = 0
     forces = defaultdict(set)
     for pos, val in state.items():
@@ -145,8 +145,8 @@ def simulate(state):
         posititions = forces[names[0]] | forces[names[1]]
         order = deque(reading_order(posititions))
         updates = {}
-        print(round)
-        print(display(state), "\n")
+        # print(round)
+        # print(display(state), "\n")
         # if len(forces["Elves"]) == 2:
         #     breakpoint()
         while order:
@@ -177,6 +177,9 @@ def simulate(state):
 
                     # Remove dead unit
                     if not hostile:
+                        # For part 2
+                        if enemy == no_casualties:
+                            return
                         state[target] = None
                         forces[enemy].remove(target)
                         updates.pop(target, None)
@@ -204,19 +207,23 @@ def simulate(state):
 
 
 def all_paths(source, targets, mapping):
+    if not targets:
+        return None, None
     dist = defaultdict(lambda: inf)
     dist[source] = 0
 
     # Store options in prev, recover original by reverse iteration?
     prev = defaultdict(set)
     shortest_dist = inf
-    nearest_target = complex(inf, inf)
+    nearest_target = CINF
     queue = deque([source])
     visited = set()
 
     while queue:
         current = queue.pop()
         current_dist = dist[current]
+        if current_dist > shortest_dist:
+            continue
 
         # if current in targets:
         #     if source == 3 + 4j:
@@ -238,6 +245,16 @@ def all_paths(source, targets, mapping):
                 if alt < dist[neighbor]:
                     prev[neighbor] = {current}
                     dist[neighbor] = alt
+                    if neighbor in targets:
+                        if alt < shortest_dist:
+                            shortest_dist = alt
+                            nearest_target = neighbor
+                        elif alt == shortest_dist:
+                            nearest_target = (
+                                neighbor
+                                if less(neighbor, nearest_target)
+                                else nearest_target
+                            )
                 # Alternate path found
                 elif alt == dist[neighbor]:
                     prev[neighbor].add(current)
@@ -246,12 +263,7 @@ def all_paths(source, targets, mapping):
                     visited.add(neighbor)
                     queue.appendleft(neighbor)
 
-    reached = set(dist.keys()) & targets
-    if reached:
-        nearest_target = min(reached, key=lambda k: (dist[k], k.imag, k.real))
-        # print(nearest_target)
-        return prev, nearest_target
-    return None, None
+    return prev, nearest_target
 
 
 # Find the first steps of all possible shortest paths to a target
@@ -277,16 +289,48 @@ def find_initial_steps(prev, endpoint, origin):
     # Then read backward, expanding each with branches
 
 
-def find_min_attack(start):
+def copy_dict(di):
+    return {
+        k: v if not v else type(v)(v.allegiance, v.hp, v.attack) for k, v in di.items()
+    }
 
-    defeat = True
-    high = 200
+
+# Set all units' hp to new value
+def boost(state, val, army):
+    for k, v in state.items():
+        if v and v.allegiance == army:
+            state[k].attack = val
+
+    return state
+
+
+def find_min_attack(start, high, side):
+    low = 3
+    best = inf
+    found = None
+
+    while low <= high:
+        mid = (low + high) // 2
+
+        if result := simulate(boost(copy_dict(start), mid, side), no_casualties=side):
+            if mid < best:
+                found = result
+                best = mid
+            high = mid - 1
+        else:
+            low = mid + 1
+
+    return found
 
 
 with open("inputs/day15.txt") as f:
     raw_input = f.read().splitlines()
 
-state = parse(raw_input)
+default_hp = 200
+state = parse(raw_input, default_hp)
 neighbors = make_neighbors(state)
-part1 = simulate(dict(state))
+part1 = simulate(copy_dict(state))
 print(part1)
+
+part2 = find_min_attack(state, default_hp, "Elves")
+print(part2)
