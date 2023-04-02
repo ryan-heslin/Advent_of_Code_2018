@@ -87,7 +87,6 @@ class Program:
         self.registers = {k: 0 for k in self.registers.keys()}
 
     def exec(self, stop_val=None):
-        # breakpoint()
         pointer = 0
         stop = len(self.code)
         instruction_register = self.instruction_register
