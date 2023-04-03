@@ -1,2 +1,2 @@
 inputs/
-./**/__pycache__/
+solutions/utils/__pycache__/*
