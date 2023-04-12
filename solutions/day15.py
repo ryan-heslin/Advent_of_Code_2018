@@ -3,6 +3,7 @@ from collections import deque
 from functools import cache
 from math import inf
 
+# Complex infinity
 CINF = complex(inf, inf)
 
 

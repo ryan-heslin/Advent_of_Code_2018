@@ -1,68 +1,72 @@
 from collections import defaultdict
 from collections import deque
+from math import inf
 
 GROUP_START = "("
 GROUP_END = ")"
-SEPARATOR = "|"
+ALTERNATE = "|"
+
+DIRECTIONS = {"N": -1j, "E": 1, "S": 1j, "W": -1, "": 0}
 
 
-def read_to_next_group(string):
-    group_start = string.find(GROUP_START)
-    group_end = string.find(GROUP_END)
+def traverse(string):
+    string = string[1:-1]
+    length = len(string)
+    graph = defaultdict(set)
 
-    # End of string
-    if group_start == -1 and group_end == -1:
-        return len(string), ""
-    elif group_start == -1 or group_end < group_start:
-        return group_end, GROUP_END
-    elif group_end == -1 or group_start < group_end:
-        return group_start, GROUP_START
-    else:
-        raise ValueError
+    def inner(string_i, start):
+        position = start
+        while string_i < length:
+            current_char = string[string_i]
+            if current_char == GROUP_START:
+                # breakpoint()
+                string_i = inner(string_i + 1, position)
+            elif current_char == GROUP_END:
+                return string_i + 1
+            elif current_char == ALTERNATE:
+                position = start
+                string_i += 1
+            else:
+                new = position + DIRECTIONS[current_char]
+                graph[position].add(new)
+                graph[new].add(position)
+                position = new
+                string_i += 1
 
+        return string_i
 
-# If open group:
-
-
-def build_tree(pattern):
-    stop_type = None
-    parts_found = 0
-    parts = []
-    tree = defaultdict(set)
-    preceding = deque([])
-
-    while pattern != "":
-        end_char, stop_type = read_to_next_group(pattern)
-        current = pattern[:end_char]
-        pattern = pattern[end_char + 1 :]
-        parts = current.split(SEPARATOR)
-        current_preceding = preceding[-1] if len(preceding) else None
-
-        for part in parts:
-            id = parts_found
-            parts_found += 1
-            parts.append(part)
-            if preceding:
-                tree[current_preceding].add(id)
-
-        if stop_type == GROUP_START:
-            preceding.append(parts[-1])
-        elif stop_type == GROUP_END:
-            preceding.pop()
-
-    return parts, tree
+    inner(0, 0)
+    return graph
 
 
-# Read pattern up to next group start/end
-# Split into parts
-# If parts
-# Add each part to IDs
-# Add
-# If start, append tuple of parts to stack
-# Else pop from stack
-# For each part
-# Append part to list
-# In dict, map index to indices of children
+def dijkstra(start, graph):
 
-# DO Dijkstra on returned reference and map
-# Doors (edges) are bidirectional
+    dist = defaultdict(lambda: inf)
+    dist[start] = furthest = 0
+    visited = set()
+    queue = deque([start])
+
+    while queue:
+        current = queue.popleft()
+        current_dist = dist[current]
+        furthest = max(current_dist, furthest)
+        alt = current_dist + 1
+        for neighbor in graph[current]:
+            dist[neighbor] = min(dist[neighbor], alt)
+            if neighbor not in visited:
+                queue.appendleft(neighbor)
+                visited.add(neighbor)
+
+    return dist
+
+
+with open("inputs/day20.txt") as f:
+    raw_input = f.read().rstrip("\n")
+
+graph = traverse(raw_input)
+dist = dijkstra(0, graph)
+part1 = max(dist.values())
+print(part1)
+
+part2 = sum(v > 999 for v in dist.values())
+print(part2)
