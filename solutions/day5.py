@@ -6,16 +6,6 @@ ASCII_A = 65
 LETTERS = 26
 
 
-def reduce1(polymer):
-    old = polymer
-    pattern = re.compile(r"([a-zA-Z])(?!\1)(?i:\1)")
-    while True:
-        reduced = re.sub(pattern, old, polymer, count=1)
-        if reduced == old:
-            return reduced
-        old = reduced
-
-
 def reduce(polymer):
     while True:
         for i in range(len(polymer) - 1):
@@ -34,7 +24,6 @@ def optimize(polymer):
         range(ASCII_A + ASCII_OFFSET, ASCII_A + ASCII_OFFSET + LETTERS),
     ):
         lower, upper = pair
-        print(lower, upper, sep="\t")
         filtered = list(filter(lambda x: not (x == lower or x == upper), polymer))
         best = min(best, len(reduce(filtered)))
     return best

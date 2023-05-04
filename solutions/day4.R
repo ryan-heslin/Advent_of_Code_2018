@@ -27,7 +27,6 @@ minutes <- function(ts) as.integer(strftime(ts, format = "%M"))
 sleepiest_guard <- function(guards) {
     sleepiest <- colSums(guards) |>
         which.max()
-    print(sleepiest)
     minute <- which.max(guards[[sleepiest]]) - 1
     minute * as.numeric(colnames(guards)[[sleepiest]])
 }

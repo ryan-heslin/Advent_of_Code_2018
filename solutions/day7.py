@@ -92,8 +92,6 @@ def complete_tasks(parents, children, roots, n_workers=5):
                 open.update(children[task])
         # Remove completed workers
         del workers[cutoff:]
-        print(workers)
-        print(minutes)
     return minutes
 
 

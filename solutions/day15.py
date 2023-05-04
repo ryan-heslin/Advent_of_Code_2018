@@ -310,6 +310,13 @@ def find_min_attack(start, high, side):
     best = inf
     found = None
 
+    # Binary search is incorrect on some inputs :(
+    while True:
+        result = simulate(boost(copy_dict(start), low, side), no_casualties=side)
+        if result:
+            return result
+        low += 1
+
     while low <= high:
         mid = (low + high) // 2
 
