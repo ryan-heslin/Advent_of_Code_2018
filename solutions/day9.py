@@ -1,4 +1,5 @@
-from itertools import zip_longest
+def start():
+    return {0: {-1: 0, 1: 0}}
 
 
 def play(marbles, last_marble, n_players):
@@ -14,6 +15,7 @@ def play(marbles, last_marble, n_players):
             player = turn % n_players
             player += n_players if player == 0 else 0
             # Go 7 left
+            left = None
             for _ in range(moves_left):
                 left = marbles[current][-1]
                 current = left
@@ -46,14 +48,10 @@ with open("inputs/day9.txt") as f:
     n_players = int(words[0])
     last_marble = int(words[-2])
 
-
-def start():
-    return {0: {-1: 0, 1: 0}}
-
-
 marbles = {0: {-1: 0, 1: 0}}
 part1 = play(start(), last_marble, n_players)
 print(part1)
 
-part2 = play(start(), last_marble * 100, n_players)
+factor = 100
+part2 = play(start(), last_marble * factor, n_players)
 print(part2)

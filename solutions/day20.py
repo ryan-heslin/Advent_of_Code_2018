@@ -19,7 +19,6 @@ def traverse(string):
         while string_i < length:
             current_char = string[string_i]
             if current_char == GROUP_START:
-                # breakpoint()
                 string_i = inner(string_i + 1, position)
             elif current_char == GROUP_END:
                 return string_i + 1
@@ -68,5 +67,6 @@ dist = dijkstra(0, graph)
 part1 = max(dist.values())
 print(part1)
 
-part2 = sum(v > 999 for v in dist.values())
+threshold = 1000
+part2 = sum(v >= threshold for v in dist.values())
 print(part2)

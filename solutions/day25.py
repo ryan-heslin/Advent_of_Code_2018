@@ -17,10 +17,7 @@ def solve(stars):
                 if any(manhattan(known, neighbor) < 4 for known in current):
                     removals.add(i)
 
-            new = set()
-            for i in removals:
-                new.add(stars.pop(i))
-            current = new
+            current = {stars.pop(i) for i in removals}
 
     return result
 

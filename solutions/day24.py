@@ -70,8 +70,7 @@ class Group:
         # Immune to attack
         self.number -= damage // self.hp
         # All units destroyed
-        if self.number <= 0:
-            self.alive = False
+        self.alive = self.number > 0
 
     @cache
     def casualties(self, type, power):
@@ -141,7 +140,6 @@ def simulate(combatants):
         )
 
         # Attacker : target
-        # breakpoint()
         targeted = {}
         for attacker_id, attacker in targeting_order:
             attacker_army = attacker.army
@@ -156,7 +154,6 @@ def simulate(combatants):
             if current_target is not None:
                 targeted[attacker_id] = current_target.id
 
-        # assert len(targeted.values()) == len(set(targeted.values()))
         attack_order = sorted(
             targeted.items(),
             key=lambda x: combatants[x[0]].initiative,
@@ -199,11 +196,6 @@ def find_boost(armies):
             return count_units(result.values())
         boost += 1
 
-
-# 15035 too low
-# Effective power is damage
-# Damage doubled if target weak to attacker's attack type, 0 if immune
-# min(attack_strength // unit_hitpoints, n_units) are killed
 
 with open("inputs/day24.txt") as f:
     raw_input = f.read().rstrip("\n")

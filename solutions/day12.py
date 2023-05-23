@@ -37,8 +37,9 @@ def true_sum(di):
 
 def simulate(state, rules, n_generations=1000):
     edge = WINDOW // 2
-    old_difference = new_difference = part1 = None
-    # breakpoint()
+    old_difference = part1 = None
+    part1_done = False
+
     for i in range(n_generations):
         left = min(k for k, v in state.items() if v) - WINDOW + 1
         middle = left + edge
@@ -56,8 +57,9 @@ def simulate(state, rules, n_generations=1000):
             if rules.get(tuple(window)):
                 new[middle] = True
 
-        if i == 20:
+        if not part1_done and i == 20:
             part1 = true_sum(state)
+            part1_done = True
         difference = true_sum(new) - true_sum(state)
         if difference == old_difference:
             return part1, {

@@ -105,12 +105,10 @@ class Program:
 
 def extract_numbers(line):
     cleaned = re.sub(r"[^0-9\s]+", "", line).rstrip(" ").lstrip(" ").split(" ")
-    # parts = re.split(r"\s", cleaned)
     return list(map(int, cleaned))
 
 
 def parse_sample(lines):
-    # breakpoint()
     return [extract_numbers(line) for line in lines.splitlines()]
 
 

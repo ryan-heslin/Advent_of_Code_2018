@@ -9,7 +9,6 @@ find_guard <- function(record) {
             sleep_end <- row[["timestamp"]]
             sleep_minutes <- seq(minutes(sleep_start), minutes(sleep_end) - 1) + 1
             guards[[current_guard]][sleep_minutes] <- guards[[current_guard]][sleep_minutes] + 1
-
             # New guard
         } else {
             guard <- row[["event"]]

@@ -2,7 +2,7 @@ import re
 from math import inf
 
 ASCII_OFFSET = 32
-ASCII_A = 65
+ASCII_A = ord("A")
 LETTERS = 26
 
 

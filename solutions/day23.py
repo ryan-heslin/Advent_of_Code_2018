@@ -200,7 +200,6 @@ class Cube:
     def __repr__(self):
         return self.vertices.__repr__()
 
-    # Not sure about this...
     def __lt__(self, other):
         return manhattan(self.center) < manhattan(other.center)
 
@@ -261,26 +260,6 @@ def find_most_in_range(nanobots):
     return sum(longest.in_range(bot.position) for bot in nanobots)
 
 
-def find_clusters(bots):
-    result = {i: {i} for i in range(len(nanobots))}
-    combos = itertools.combinations(range(len(nanobots)), r=2)
-    for i, j in combos:
-        reading = bots[i].in_range(bots[j].position) and bots[j].in_range(
-            bots[i].position
-        )
-        if reading:
-            result[i].add(j)
-            result[j].add(i)
-
-    return max(result.values(), key=len)
-
-
-def minimize_distance(points):
-    points = sorted(points)
-    middle = len(points) // 2
-    return points[middle - 1 : middle + 1]
-
-
 def count_bots_in_range(cube, bots):
     return sum(
         any(cube.vertex_inside(vertex) for vertex in bot.vertices)
@@ -329,15 +308,6 @@ def octary_search(nanobots, box):
     return closest_distance
 
 
-def search_around_point(point, bots):
-    points = itertools.product(
-        range(point[0] - 10, point[0] + 10),
-        range(point[1] - 10, point[1] + 10),
-        range(point[2] - 10, point[2] + 10),
-    )
-    return max(points, key=lambda p: sum(bot.in_range(p) for bot in bots))
-
-
 with open("inputs/day23.txt") as f:
     raw_input = f.read().splitlines()
 
@@ -345,34 +315,11 @@ nanobots = list(map(Nanobot.parse, raw_input))
 part1 = find_most_in_range(nanobots)
 print(part1)
 
-# Find biggest cluster of nanobots that are mutually in range
-# Find minimal point in shared region
-
 positions = list(map(attrgetter("position"), nanobots))
 dimensions = list(zip(*positions))
-
-# 130576687 too high
-# 129293596 too low
-
-# Is the answer the space with the maximum number of bots in range ANYWHERE?
 
 extent = find_absmax(nanobots)
 power = math.ceil(math.log2(extent))
 box = unit_cube(2**power)
 part2 = octary_search(nanobots, box)
 print(part2)
-
-
-sample_cube = [
-    [x * 4 for x in v]
-    for v in (
-        (0, 0, 0),
-        (1, 0, 0),
-        (1, 1, 0),
-        (0, 1, 0),
-        (0, 0, 1),
-        (1, 0, 1),
-        (1, 1, 1),
-        (0, 1, 1),
-    )
-]

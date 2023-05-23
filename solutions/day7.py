@@ -1,7 +1,5 @@
 from collections import defaultdict
-from math import inf
 from operator import itemgetter
-
 
 ASCII_A = ord("A")
 
@@ -29,9 +27,9 @@ def order(parents, children, roots):
     result = [min(roots)]
     unexplored = roots - set(result) | children[result[0]]
 
-    # breakpoint()
     while unexplored:
         found = False
+        node = None
         for node in sorted(unexplored):
             if node in result:
                 continue

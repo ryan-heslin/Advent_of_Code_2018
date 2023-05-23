@@ -4,8 +4,6 @@ from functools import cache
 from math import inf
 from queue import PriorityQueue
 
-# from collections import deque
-
 
 class Region(Enum):
     ROCKY = 0
@@ -76,7 +74,6 @@ def create_row(y, xmax, cave, erosion):
     cave[coord] = REGIONS[first % 3]
 
     for _ in range(xmax):
-        # coord = complex(x, y)
         coord += 1
         value = int(erosion_level(erosion[coord - 1] * erosion[coord - 1j], depth))
         erosion[coord] = value
@@ -158,7 +155,6 @@ def find_path(origin, target, cave, xmax, ymax, erosion):
         current = queue.get(block=False)
         if current == goal:
             best = dist[current]
-            # return best
             continue
         current_dist = dist[current]
         if current_dist + current.estimate >= best:
@@ -207,8 +203,6 @@ with open("inputs/day22.txt") as f:
     raw_input = f.read().splitlines()
 
 depth, target = parse(raw_input)
-# depth = 510
-# target = 10 + 10j
 erosion = create_map(depth, target)
 cave, part1 = sum_values(erosion)
 print(part1)

@@ -1,5 +1,3 @@
-from math import inf
-
 from utils import timecode
 
 with open("inputs/day21.txt") as f:
@@ -26,8 +24,6 @@ class CountedProgram(timecode.Program):
         part1 = None
 
         while 0 <= pointer < stop:
-            # if pointer == 28:
-            #     breakpoint()
             if pointer == loop_start:
                 self.registers[2] = 1
                 self.registers[instruction_register] = pointer_reset
@@ -46,9 +42,6 @@ class CountedProgram(timecode.Program):
                         return part1, oldest
                     states.add(record)
                     oldest = previous
-                    # print(new)
-                    # if record in states:
-                    #     return counter
                     previous = new
                 self.registers[self.instruction_register] = pointer
                 self.registers = self.code[pointer](self.registers)
@@ -62,14 +55,3 @@ program.registers[0] = None
 part1, part2 = program.exec()
 print(part1)
 print(part2)
-
-# Loop 18-25
-# Only runs once if register 0 > 256
-# 33 sets 4 to 1 if reg 0 == reg4; probable loop
-# 3 incremented by 1 on line 3,then zeroed
-# 4 zeroed
-# Register 0 read only once in program, line 31
-# Loop break line :
-# seti 27 8 3
-# 0 must be smallest number greater than whatever 4 ends up as
-# 14738375 too high

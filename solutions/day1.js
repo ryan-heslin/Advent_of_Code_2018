@@ -8,7 +8,6 @@ function first_dupe(nums) {
     let length = nums.length;
     while (true) {
         value += nums[i];
-        //console.log(value)
         if (seen.has(value)) return value;
         seen.add(value);
         i = (i + 1) % length;

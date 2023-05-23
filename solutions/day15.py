@@ -305,10 +305,8 @@ def boost(state, val, army):
     return state
 
 
-def find_min_attack(start, high, side):
+def find_min_attack(start, side):
     low = 3
-    best = inf
-    found = None
 
     # Binary search is incorrect on some inputs :(
     while True:
@@ -316,19 +314,6 @@ def find_min_attack(start, high, side):
         if result:
             return result
         low += 1
-
-    while low <= high:
-        mid = (low + high) // 2
-
-        if result := simulate(boost(copy_dict(start), mid, side), no_casualties=side):
-            if mid < best:
-                found = result
-                best = mid
-            high = mid - 1
-        else:
-            low = mid + 1
-
-    return found
 
 
 with open("inputs/day15.txt") as f:
@@ -340,5 +325,5 @@ neighbors = make_neighbors(state)
 part1 = simulate(copy_dict(state))
 print(part1)
 
-part2 = find_min_attack(state, default_hp, "Elves")
+part2 = find_min_attack(state, "Elves")
 print(part2)

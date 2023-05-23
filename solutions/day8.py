@@ -1,5 +1,4 @@
 def parse_nodes(numbers, total=0):
-
     n_children, n_metadata = numbers[:2]
     del numbers[:2]
     for _ in range(n_children):

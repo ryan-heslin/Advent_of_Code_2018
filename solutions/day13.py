@@ -13,12 +13,6 @@ def display(x):
 
 def compare_complex(x):
     return (x.imag, x.real)
-    # if x.imag < y.imag:
-    #     return True
-    # elif x.imag == y.imag:
-    #     return x.imag < y.imag
-    # else:
-    #     return False
 
 
 def identity(x):
@@ -69,18 +63,6 @@ class Minecart:
             self.orientation = self.__class__.rotations[(track, self.orientation)](
                 self.orientation
             )
-        # elif (
-        #     track == "right"
-        # ):  # / Right if going up/down, left going down, etc. (down is 1j)
-        #     # rotator = (left90, right90)[self.__position.imag == 1]
-        #     self.orientation = (
-        #         -1 * abs(self.orientation.real) * right90(self.orientation)
-        #     )
-        # elif track == "left":  # \
-        #     self.orientation = (
-        #         -1 * abs(self.orientation.real) * left90(self.orientation)
-        #     )
-        # If straight, keep orientation
 
     @property
     def position(self):
@@ -123,7 +105,6 @@ def run(minecarts, layout):
                     part1 = cart.position
                     crashed = True
                 minecarts.pop(new)
-                # order.remove(position)
             else:
                 minecarts[new] = cart
     return part1, next(iter(minecarts.keys()))

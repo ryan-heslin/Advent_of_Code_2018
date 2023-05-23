@@ -56,10 +56,10 @@ grid <- hundreds((rack_id * row(grid) + grid_serial) * rack_id) - 5
 part1 <- find_greatest(grid, 3)[[2]]
 rev(part1) |>
     to_string() |>
-    print()
+    cat("\n")
 
 result <- find_maximum(grid)
 result[1:2] <- result[2:1]
 names(result) <- NULL
 to_string(result) |>
-    print()
+    cat("\n")
