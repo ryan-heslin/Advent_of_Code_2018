@@ -1,13 +1,12 @@
 simulate <- function(positions, velocities) {
     last_area <- Inf
-
     i <- 0
-    L <- 0
-    R <- max(abs(positions))
-    while (L <= R) {
+
+    repeat ({
         positions <- positions + velocities
         # Area method recommended by subreddit
-        area <- as.numeric(max(positions[, 1]) - min(positions[, 1])) * (max(positions[, 2]) - min(positions[, 2]))
+        area <- as.numeric(max(positions[, 1]) - min(positions[, 1])) *
+            (max(positions[, 2]) - min(positions[, 2]))
         if (area > last_area) {
             display(last_positions)
             return(i)
@@ -15,8 +14,9 @@ simulate <- function(positions, velocities) {
         last_area <- area
         last_positions <- positions
         i <- i + 1
-    }
+    })
 }
+
 display <- function(X) {
     lower <- min(X)
     X <- X - lower + 1
@@ -27,14 +27,8 @@ display <- function(X) {
         do.call(what = paste0) |>
         paste("\n")
 
-    cat(string[-(1:40)])
-    cat("\n")
+    cat(string, "\n")
 }
-
-dist2 <- function(X, attrs) {
-    .Call(C_Cdist, X, "euclidean", attrs, 2)
-}
-
 
 raw_input <- readLines("inputs/day10.txt")
 data <- gsub("velocity=", ",", raw_input) |>

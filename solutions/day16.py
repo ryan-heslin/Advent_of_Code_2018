@@ -166,5 +166,3 @@ program = Program(code, translation, 4)
 program.exec()
 part2 = program.registers[0]
 print(part2)
-
-# 598 too low
