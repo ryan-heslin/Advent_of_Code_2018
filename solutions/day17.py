@@ -83,23 +83,6 @@ def display(data, ymax):
     )
 
 
-def topmost(data):
-    xmin, xmax = xrange(data)
-    ymax = int(max(data.keys(), key=attrgetter("imag")).imag)
-    result = {}
-    for x in range(xmin, xmax + 1):
-        for y in range(ymax + 1):
-            coord = complex(x, y)
-            if data[coord] == Ground.CLAY.value:
-                value = coord
-                break
-        else:
-            value = None
-        result[x] = value
-
-    return result
-
-
 def mark_reservoirs(xranges, underground):
     clay = Ground.CLAY.value
     result = set()
